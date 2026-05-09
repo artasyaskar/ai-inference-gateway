@@ -47,7 +47,7 @@ async def check_database(db: AsyncSession) -> HealthStatus:
     try:
         # Execute simple query to test connectivity
         result = await db.execute(text("SELECT 1"))
-        await result.scalar()
+        result.scalar()  # Don't await this, it returns the value directly
         
         response_time = (time.time() - start_time) * 1000  # Convert to ms
         

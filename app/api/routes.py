@@ -6,6 +6,7 @@ Combines all API endpoints and provides authentication routes.
 
 import logging
 from datetime import datetime
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -35,8 +36,8 @@ logger = logging.getLogger(__name__)
 api_router = APIRouter(prefix="/api/v1")
 
 # Include sub-routers
-api_router.include_router(health_router, prefix="/health")
-api_router.include_router(inference_router, prefix="/inference")
+api_router.include_router(health_router)
+api_router.include_router(inference_router)
 
 
 @api_router.post(

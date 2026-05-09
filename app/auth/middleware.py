@@ -37,6 +37,7 @@ class AuthMiddleware:
     
     def __init__(
         self,
+        app=None,
         excluded_paths: Optional[List[str]] = None,
         required_scopes: Optional[List[str]] = None
     ):
@@ -44,9 +45,11 @@ class AuthMiddleware:
         Initialize authentication middleware.
         
         Args:
+            app: FastAPI app instance (passed automatically by add_middleware)
             excluded_paths: URL paths to exclude from authentication (e.g., ['/health', '/docs'])
             required_scopes: Default scopes required for all protected routes
         """
+        self.app = app
         self.excluded_paths = excluded_paths or [
             "/health",
             "/api/v1/health",
@@ -58,21 +61,28 @@ class AuthMiddleware:
         ]
         self.required_scopes = required_scopes or []
     
-    async def __call__(self, request: Request, call_next):
+    async def __call__(self, scope, receive, send):
         """
-        Process each request through authentication check.
+        Process each request through authentication check (ASGI middleware style).
         
         Args:
-            request: FastAPI request object
-            call_next: Next middleware/route handler
-        
-        Returns:
-            Response: Either the protected response or 401/403 error
+            scope: ASGI scope
+            receive: ASGI receive function
+            send: ASGI send function
         """
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        
+        from starlette.requests import Request
+        
+        request = Request(scope, receive)
+        
         # Skip authentication for excluded paths
         path = request.url.path
         if any(path.startswith(excluded) for excluded in self.excluded_paths):
-            return await call_next(request)
+            await self.app(scope, receive, send)
+            return
         
         # Extract and validate token
         try:
@@ -81,9 +91,10 @@ class AuthMiddleware:
             
         except AuthenticationError as e:
             logger.warning(f"Authentication failed for {path}: {e.message}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail={
+            from starlette.responses import JSONResponse
+            response = JSONResponse(
+                status_code=401,
+                content={
                     "error": {
                         "code": "AUTHENTICATION_REQUIRED",
                         "message": e.message
@@ -91,12 +102,15 @@ class AuthMiddleware:
                 },
                 headers={"WWW-Authenticate": "Bearer"}
             )
+            await response(scope, receive, send)
+            return
         
         except AuthorizationError as e:
             logger.warning(f"Authorization failed for {path}: {e.message}")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={
+            from starlette.responses import JSONResponse
+            response = JSONResponse(
+                status_code=403,
+                content={
                     "error": {
                         "code": e.error_code,
                         "message": e.message,
@@ -104,10 +118,11 @@ class AuthMiddleware:
                     }
                 }
             )
+            await response(scope, receive, send)
+            return
         
         # Continue to next middleware/route
-        response = await call_next(request)
-        return response
+        await self.app(scope, receive, send)
     
     async def _extract_and_verify_token(self, request: Request) -> TokenData:
         """

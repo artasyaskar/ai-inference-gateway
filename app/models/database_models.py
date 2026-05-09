@@ -294,8 +294,8 @@ class InferenceRequest(Base):
         nullable=True
     )
     
-    # Additional metadata
-    metadata: Mapped[Optional[dict]] = mapped_column(
+    # Additional metadata (renamed to avoid SQLAlchemy reserved keyword)
+    request_metadata: Mapped[Optional[dict]] = mapped_column(
         JSONB,
         default=dict,
         nullable=True

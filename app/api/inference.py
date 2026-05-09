@@ -193,14 +193,15 @@ async def submit_inference(
             priority=request.priority
         )
     else:
-        # Process immediately
-        background_tasks.add_task(
-            inference_engine.process_single,
+        # Process immediately using Celery
+        from app.celery_tasks.inference_tasks import process_inference_task
+        process_inference_task.delay(
             db_request.id,
             request.model,
             request.input,
             request.parameters or {},
-            request.task_type.value
+            request.task_type.value,
+            current_user.user_id
         )
     
     # Record metrics
