@@ -1,0 +1,92 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Model cache
+models_cache/
+model_cache/
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.onnx
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Test artifacts
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Docker
+.dockerignore
+
+# Alembic
+migrations/__pycache__/
+migrations/versions/__pycache__/
+
+# Prometheus data
+prometheus_data/
+
+# Grafana data
+grafana_data/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
